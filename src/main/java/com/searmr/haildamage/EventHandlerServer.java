@@ -1,5 +1,6 @@
 package com.searmr.haildamage;
 
+import com.sun.jna.platform.win32.WinDef;
 import dev.protomanly.pmweather.PMWeather;
 import dev.protomanly.pmweather.config.ServerConfig;
 import dev.protomanly.pmweather.event.GameBusEvents;
@@ -45,6 +46,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 
 import static dev.protomanly.pmweather.event.GameBusClientEvents.canPrecipitateAt;
+import static dev.protomanly.pmweather.event.GameBusClientEvents.lastLevel;
 import static dev.protomanly.pmweather.weather.ThermodynamicEngine.getPrecipitationType;
 
 
@@ -59,7 +61,7 @@ public class EventHandlerServer {
 
     static public int maxHailDamage = 4;
     private static final Logger log = LoggerFactory.getLogger(EventHandlerServer.class);
-
+    static  boolean run = true;
     @SubscribeEvent
     public static void onTick(EntityTickEvent.Post event) {
         var logs = PmWeatherHailDamageServer.LOGGER;
@@ -70,7 +72,7 @@ public class EventHandlerServer {
         WeatherHandler handle = (WeatherHandler) managers.get(entity.level().dimension());
 
 
-        if (!entity.level().isClientSide() && handle != null) {
+        if (!entity.level().isClientSide() && handle != null && run ) {
 
             ThermodynamicEngine.Precipitation type = getPrecipitationType(handle,entity.position(),entity.level(),0);
                   if (canPrecipitateAt(entity.level(),entity.blockPosition())) {
@@ -144,8 +146,9 @@ public class EventHandlerServer {
             List<Integer> toRemove = new ArrayList<>();
             var logs = PmWeatherHailDamageServer.LOGGER;
 
-        Level level = event.getLevel();
-            if (!level.isClientSide() && ServerConfig.validDimensions != null && level instanceof ServerLevel serverLevel) {
+            Level level = event.getLevel();
+            if (!Config.hailDestroysBlocks && !hailAffectedBlocks.isEmpty()) hailAffectedBlocks.clear();
+            if (!level.isClientSide() && ServerConfig.validDimensions != null && level instanceof ServerLevel serverLevel && run && Config.hailDestroysBlocks) {
 
                 List<ServerPlayer> validPlayers = new ArrayList();
                 List<ServerPlayer> plrs = serverLevel.players();
@@ -158,8 +161,13 @@ public class EventHandlerServer {
                         float hailSize = 5 * hailLevel;
                         BlockState block = level.getBlockState(blockPos);
                         block.getBlock().defaultDestroyTime();
+                        double maxDist = 103;
+                        double xPos = (double)blockPos.getX();
+                        double yPos = (double)blockPos.getY();
+                        double zPos = (double)blockPos.getZ();
+                        boolean yes = true;
+                        boolean validPos = false;
 
-                        if (block.is(Blocks.COBBLESTONE)) logs.info(Float.toString(GetBlockSpeed(block)));
                         if (hailSize < 0.7 && hailSize > 0.3) {
                             // base vegetation is destroyed here
                             if (!block.is(Tags.Blocks.GLASS_BLOCKS) && !block.is(Tags.Blocks.GLASS_BLOCKS) && block.is(BlockTags.FLOWERS)) {
@@ -339,6 +347,22 @@ public class EventHandlerServer {
                                 }
                             }
                         }
+                       if (!plrs.isEmpty()) {
+                           for (ServerPlayer player : plrs) {
+                               Vec3 pos = player.position();
+
+
+                               if (pos.distanceTo(Vec3.atLowerCornerOf(blockPos)) <= 105)  {
+                                   validPos = true;
+                                   break;
+                               }
+                           }
+                           if (!validPos || !canPrecipitateAt(level,blockPos.above()) || block.is(Blocks.AIR)) {
+                               toRemove.add(blockPos.hashCode());
+
+                               continue;
+                           }
+                       }
                     }
 
 
