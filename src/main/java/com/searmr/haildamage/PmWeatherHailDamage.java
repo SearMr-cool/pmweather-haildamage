@@ -5,6 +5,7 @@ import dev.protomanly.pmweather.weather.WeatherHandlerServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.event.entity.living.LivingEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
@@ -35,6 +36,8 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.client.gui.ConfigurationScreen;
+
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
@@ -51,7 +54,7 @@ import java.lang.reflect.Field;
 import java.util.Map;
 
 
-@Mod(PmWeatherHailDamage.MODID)
+@Mod(value=PmWeatherHailDamage.MODID,dist = Dist.CLIENT)
 public class PmWeatherHailDamage {
 
     public static final String MODID = "searmrhaildamage";
@@ -61,6 +64,7 @@ public class PmWeatherHailDamage {
 
 
     public PmWeatherHailDamage(IEventBus modEventBus, ModContainer modContainer) {
+
 
     }
 
