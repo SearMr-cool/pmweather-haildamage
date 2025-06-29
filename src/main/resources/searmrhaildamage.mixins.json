@@ -1,0 +1,11 @@
+{
+  "required": true,
+  "package": "com.searmr.haildamage.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "MixinWaterFluid"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

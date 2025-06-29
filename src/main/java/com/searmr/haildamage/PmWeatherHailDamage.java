@@ -65,7 +65,10 @@ public class PmWeatherHailDamage {
 
     public PmWeatherHailDamage(IEventBus modEventBus, ModContainer modContainer) {
 
+        if (Dist.CLIENT.isClient()) {
 
+            modContainer.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
+        }
     }
 
 

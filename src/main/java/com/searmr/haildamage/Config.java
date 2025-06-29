@@ -24,15 +24,21 @@ public class Config {
 
     private static final ModConfigSpec.IntValue hail_destroy_time;
     public static int destroyTime ;
+
     private static final ModConfigSpec.BooleanValue hail_destroys_blocks;
     public static boolean hailDestroysBlocks ;
+    private static final ModConfigSpec.IntValue max_water_amount;
+    public static int maxWaterAmount ;
     public static final ModConfigSpec thing;
+
+
 
     @SubscribeEvent
     private static void onLoad(ModConfigEvent event) {
         if (!(event instanceof ModConfigEvent.Unloading) && event.getConfig().getSpec() == thing){
             destroyTime = (Integer) hail_destroy_time.get();
             hailDestroysBlocks = (Boolean) hail_destroys_blocks.get();
+            maxWaterAmount = (Integer) max_water_amount.get();
         }
 
 
@@ -43,7 +49,9 @@ public class Config {
     static  {
         hail_destroy_time = BUILDER.comment("How long it takes for blocks to be destroyed (1 means they break at their normal block speed while setting it to 2 would mean it takes 2 times as long and etc)").defineInRange("haildestroytime",4,1,10);
         hail_destroys_blocks = BUILDER.comment("Wether or not blocks are destroyed by hail").define("haildestroysblocks",true);
-      thing = BUILDER.build();
+        max_water_amount = BUILDER.comment("The max amount of water that can be added to water during rain").defineInRange("maxwateramount",4,1,18);
+
+        thing = BUILDER.build();
     }
 }
 

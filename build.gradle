@@ -124,7 +124,11 @@ configurations {
 }
 
 dependencies {
+
+    implementation "maven.modrinth:spark:1.10.124-neoforge-1.21.1"
     implementation "maven.modrinth:protomanlys-weather:0.14.16-alpha"
+    implementation "maven.modrinth:flowing-fluids:yzQYHjP9"
+    implementation "maven.modrinth:lithium:mc1.21.1-0.15.0-neoforge"
 //    implementation "maven.modrinth:serene-seasons:SPj5bJoM"
 //    implementation "maven.modrinth:glitchcore:8wmCpbQ2"
     // Example optional mod dependency with JEI
@@ -149,6 +153,7 @@ dependencies {
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
 }
+
 
 // This block of code expands all declared replace properties in the specified resource targets.
 // A missing property will result in an error. Properties are expanded using ${} Groovy notation.
