@@ -109,7 +109,7 @@ public abstract class MixinWaterFluid extends FlowingFluid {
         WeatherHandler handle = (WeatherHandler) managers.get(level.dimension());
         float rainlevel =  handle.getPrecipitation(blockPos.getCenter());
         if (chance < Math.min(FlowingFluids.config.rainRefillChance, FlowingFluids.config.evaporationChanceV2 / 3.0F) && rainlevel > 0 && level.canSeeSky(blockPos.above()) && (!this.isInfBiome || !this.isWithinInfBiomeHeights) && !level.getBiome(blockPos).is(BiomeTags.HAS_VILLAGE_DESERT)) {
-            int amount = Math.clamp((int)(rainlevel * Config.maxWaterAmount),0,lAmount );
+            int amount = Math.clamp(Math.round(rainlevel * Config.maxWaterAmount),0,lAmount );
             Pair<Integer, Runnable> result = FFFluidUtils.placeConnectedFluidAmountAndPlaceAction(level, blockPos, amount, this, 40, FlowingFluids.config.rainFillsWaterHigherV2, false);
             if ((Integer)result.first() != amount) {
                 ((Runnable)result.second()).run();
