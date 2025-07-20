@@ -156,7 +156,7 @@ static int nextCheck = 0;
         @SubscribeEvent
         public static void LevelTick(ServerTickEvent.Post event) {
 
-         if  (nextCheck == 60) {
+         if  (nextCheck == 40) {
 
              double tps = getEstimatedTPS();
 

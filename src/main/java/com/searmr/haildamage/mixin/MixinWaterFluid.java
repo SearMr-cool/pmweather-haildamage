@@ -128,7 +128,7 @@ public abstract class MixinWaterFluid extends FlowingFluid {
 
             if (chance < FlowingFluids.config.infiniteWaterBiomeNonConsumeChance || chance < FlowingFluids.config.oceanRiverSwampRefillChance || handle.getPrecipitation(blockPos.getCenter()) > 0 && chance < FlowingFluids.config.rainRefillChance) {
                 FluidState below = level.getFluidState(blockPos.below());
-                if (below.getAmount() == 8 && below.is(FluidTags.WATER) && this.hasSkyLight && this.isInfBiome  && (Config.waterDrainsRain || handle.getPrecipitation(blockPos.getCenter()) == 0)) {
+                if (below.getAmount() == 8 && below.is(FluidTags.WATER) && this.hasSkyLight && this.isInfBiome) {
                     level.setBlockAndUpdate(blockPos, FFFluidUtils.getBlockForFluidByAmount(this, amount - 2));
                     return true;
                 }
@@ -145,7 +145,7 @@ public abstract class MixinWaterFluid extends FlowingFluid {
     private boolean ff$tryEvaporate(Level level, BlockPos blockPos, int amount, float chance) {
         var managers = GameBusEvents.MANAGERS;
         WeatherHandler handle = (WeatherHandler) managers.get(level.dimension());
-        if (chance < FlowingFluids.config.evaporationChanceV2 && amount <= this.getDropOff(level) && level.getFluidState(blockPos.below()).isEmpty() && handle.getPrecipitation(blockPos.getCenter()) == 0 && (Config.waterDrainsRain || handle.getPrecipitation(blockPos.getCenter()) == 0)) {
+        if (chance < FlowingFluids.config.evaporationChanceV2 && amount <= this.getDropOff(level) && level.getFluidState(blockPos.below()).isEmpty() && handle.getPrecipitation(blockPos.getCenter()) == 0) {
             level.setBlockAndUpdate(blockPos, Blocks.AIR.defaultBlockState());
             return true;
         } else {
