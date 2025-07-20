@@ -31,8 +31,6 @@ public class Config {
     public static int maxWaterAmount ;
     private static final ModConfigSpec.BooleanValue water_drains_rain;
     public static boolean waterDrainsRain ;
-    private static final ModConfigSpec.BooleanValue is_adaptive;
-    public static boolean isAdaptive ;
     public static final ModConfigSpec thing;
 
 
@@ -44,7 +42,6 @@ public class Config {
             hailDestroysBlocks = (Boolean) hail_destroys_blocks.get();
             maxWaterAmount = (Integer) max_water_amount.get();
             waterDrainsRain = (boolean) water_drains_rain.get();
-            isAdaptive = (boolean) is_adaptive.get();
         }
 
 
@@ -57,7 +54,6 @@ public class Config {
         hail_destroys_blocks = BUILDER.comment("Wether or not blocks are destroyed by hail").define("haildestroysblocks",true);
         max_water_amount = BUILDER.comment("The max amount of water that can be added to water during rain").defineInRange("maxwateramount",4,1,100);
         water_drains_rain = BUILDER.comment("Should rain be drained while it is raining?").define("waterdrainsrain",false);
-        is_adaptive = BUILDER.comment("pluh").define("isadaptive",true);
 
 
         thing = BUILDER.build();

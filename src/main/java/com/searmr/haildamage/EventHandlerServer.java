@@ -156,20 +156,20 @@ static int nextCheck = 0;
         @SubscribeEvent
         public static void LevelTick(ServerTickEvent.Post event) {
 
-           if (Config.isAdaptive) {
-                if (nextCheck == 60) {
+         if  (nextCheck == 60) {
 
-                    double tps = getEstimatedTPS();
+             double tps = getEstimatedTPS();
 
-                    if (tps >= 35) {
-                        lAmount = Math.clamp(lAmount - 1, 0, Config.maxWaterAmount);
+             if (tps >=35) {
+                 lAmount = Math.clamp(lAmount-1,0,Config.maxWaterAmount);
 
-                    } else lAmount = Math.clamp(lAmount + 1, 0, Config.maxWaterAmount);
-                    nextCheck = 0;
-                    PmWeatherHailDamageServer.LOGGER.info(Integer.toString(lAmount));
-                } else nextCheck++;
-            }
-           else lAmount = Config.maxWaterAmount;
+             }
+
+             else     lAmount = Math.clamp(lAmount+1,0,Config.maxWaterAmount);
+             nextCheck=0;
+             PmWeatherHailDamageServer.LOGGER.info(Integer.toString(lAmount));
+         }
+         else nextCheck++;
 
             List<Integer> toRemove = new ArrayList<>();
             var logs = PmWeatherHailDamageServer.LOGGER;
