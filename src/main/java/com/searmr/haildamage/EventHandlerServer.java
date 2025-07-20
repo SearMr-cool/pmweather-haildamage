@@ -1,6 +1,5 @@
 package com.searmr.haildamage;
 
-
 import com.sun.jna.platform.win32.WinDef;
 import dev.protomanly.pmweather.PMWeather;
 import dev.protomanly.pmweather.config.ServerConfig;
@@ -16,7 +15,6 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.protocol.game.ClientboundBlockDestructionPacket;
 import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.DistanceManager;
 import net.minecraft.server.level.ServerEntity;
 import net.minecraft.server.level.ServerLevel;
@@ -34,37 +32,26 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.BlockTypes;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.common.Tags;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
-import net.neoforged.neoforge.event.tick.ServerTickEvent;
-import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import org.jline.utils.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-
+import static dev.protomanly.pmweather.event.GameBusClientEvents.canPrecipitateAt;
+import static dev.protomanly.pmweather.event.GameBusClientEvents.lastLevel;
 import static dev.protomanly.pmweather.weather.ThermodynamicEngine.getPrecipitationType;
 
 
 @EventBusSubscriber(modid = PmWeatherHailDamage.MODID, bus=EventBusSubscriber.Bus.GAME)
 public class EventHandlerServer {
-    public static   int lAmount = 1;
-    public static boolean canPrecipitateAt(Level level, BlockPos pos) {
-        if ((double)pos.getY() > ServerConfig.layer0Height) {
-            return false;
-        } else {
-            return level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, pos).getY() <= pos.getY();
-        }
-    }
     static private  float GetBlockSpeed(BlockState blockState) {
     float mineValue = (blockState.requiresCorrectToolForDrops()) ? 5f : 1.5f;
     return blockState.getBlock().defaultDestroyTime() * mineValue;
@@ -75,18 +62,18 @@ public class EventHandlerServer {
     static public int maxHailDamage = 4;
     private static final Logger log = LoggerFactory.getLogger(EventHandlerServer.class);
     static  boolean run = true;
-    public static void onTick(Entity entity,Level level) {
+    @SubscribeEvent
+    public static void onTick(EntityTickEvent.Post event) {
+        var logs = PmWeatherHailDamageServer.LOGGER;
+
+        Entity entity = event.getEntity();
+        var managers = GameBusEvents.MANAGERS;
+
+        WeatherHandler handle = (WeatherHandler) managers.get(entity.level().dimension());
 
 
+        if (!entity.level().isClientSide() && handle != null && run ) {
 
-
-
-
-
-        if (run ) {
-            var logs = PmWeatherHailDamageServer.LOGGER;
-            var managers = GameBusEvents.MANAGERS;
-            WeatherHandler handle = (WeatherHandler) managers.get(entity.level().dimension());
             ThermodynamicEngine.Precipitation type = getPrecipitationType(handle,entity.position(),entity.level(),0);
                   if (canPrecipitateAt(entity.level(),entity.blockPosition())) {
                       float hailLevel = getHail(entity.level(),entity.position());
@@ -150,38 +137,19 @@ public class EventHandlerServer {
                   }
               }
         }
-static int nextCheck = 0;
+
     static  HashMap<Integer,HailDestroyBlock> hailAffectedBlocks = new HashMap<Integer, HailDestroyBlock>();
         static int nextTick = 0;
         @SubscribeEvent
-        public static void LevelTick(ServerTickEvent.Post event) {
-
-         if  (nextCheck == 40) {
-
-             double tps = getEstimatedTPS();
-
-             if (tps >=35) {
-                 lAmount = Math.clamp(lAmount-1,0,Config.maxWaterAmount);
-
-             }
-
-             else     lAmount = Math.clamp(lAmount+1,0,Config.maxWaterAmount);
-             nextCheck=0;
-             PmWeatherHailDamageServer.LOGGER.info(Integer.toString(lAmount));
-         }
-         else nextCheck++;
+        public static void LevelTick(LevelTickEvent.Post event) {
 
             List<Integer> toRemove = new ArrayList<>();
             var logs = PmWeatherHailDamageServer.LOGGER;
 
-            Level level = event.getServer().overworld();
+            Level level = event.getLevel();
+            if (!Config.hailDestroysBlocks && !hailAffectedBlocks.isEmpty()) hailAffectedBlocks.clear();
+            if (!level.isClientSide() && ServerConfig.validDimensions != null && level instanceof ServerLevel serverLevel && run && Config.hailDestroysBlocks) {
 
-            if (ServerConfig.validDimensions != null && level instanceof ServerLevel serverLevel && run && Config.hailDestroysBlocks) {
-                var entities = serverLevel.getAllEntities();
-                for (Entity entity : entities) {
-                    onTick(entity,level);
-                }
-                if (!Config.hailDestroysBlocks && !hailAffectedBlocks.isEmpty()) hailAffectedBlocks.clear();
                 List<ServerPlayer> validPlayers = new ArrayList();
                 List<ServerPlayer> plrs = serverLevel.players();
                 Collections.shuffle(plrs);
@@ -207,7 +175,7 @@ static int nextCheck = 0;
                             }
 
                         }
-                        else if (hailSize < 1.1 && hailSize >= 0.7) {
+                        if (hailSize < 1.1 && hailSize >= 0.7) {
                             // leaves start getting broken here
                             float maxBreakSpeed = 0.2f;
 
@@ -227,7 +195,7 @@ static int nextCheck = 0;
                                 }
                             }
                         }
-                        else if (hailSize < 1.5 && hailSize >= 1.1) {
+                        if (hailSize < 1.5 && hailSize >= 1.1) {
                             float maxBreakSpeed = 0.875f;
                             if (!block.is(Tags.Blocks.GLASS_BLOCKS) && !block.is(Tags.Blocks.GLASS_BLOCKS) && GetBlockSpeed(block) <= maxBreakSpeed) {
                                 float destroySpeed = getDestroySpeed(block, level, blockPos, maxBreakSpeed);
@@ -245,7 +213,7 @@ static int nextCheck = 0;
                                 }
                             }
                         }
-                        else if (hailSize < 1.9 && hailSize >= 1.5) {
+                        if (hailSize < 1.9 && hailSize >= 1.5) {
                             // Glass will break here
                             float maxBreakSpeed = 1.55f;
                             if (GetBlockSpeed(block) <= maxBreakSpeed) {
@@ -264,7 +232,7 @@ static int nextCheck = 0;
                                 }
                             }
                         }
-                        else if (hailSize < 2.2 && hailSize >= 1.9) {
+                        if (hailSize < 2.2 && hailSize >= 1.9) {
                             // first instances of low health mobs getting damaged
                             float maxBreakSpeed = 2.225f;
                             if (GetBlockSpeed(block) <= maxBreakSpeed) {
@@ -283,7 +251,7 @@ static int nextCheck = 0;
                                 }
                             }
                         }
-                        else if (hailSize < 3.1 && hailSize >= 2.2) {
+                        if (hailSize < 3.1 && hailSize >= 2.2) {
                             // wood is completely broken
                             float maxBreakSpeed = 3f;
                             if (GetBlockSpeed(block) <= maxBreakSpeed) {
@@ -302,7 +270,7 @@ static int nextCheck = 0;
                                 }
                             }
                         }
-                        else if (hailSize < 3.7 && hailSize >= 3.1) {
+                        if (hailSize < 3.7 && hailSize >= 3.1) {
                             // more robust blocks are broken
                             float maxBreakSpeed = 8f;
                             if (GetBlockSpeed(block) <= maxBreakSpeed) {
@@ -321,7 +289,7 @@ static int nextCheck = 0;
                                 }
                             }
                         }
-                        else if (hailSize < 4.4 && hailSize >= 3.7) {
+                        if (hailSize < 4.4 && hailSize >= 3.7) {
                             // concrete is damaged and players can suffer large amounts of damage
                             float maxBreakSpeed = 10f;
                             if (GetBlockSpeed(block) <= maxBreakSpeed) {
@@ -341,7 +309,7 @@ static int nextCheck = 0;
                                 }
                             }
                         }
-                        else if (hailSize < 5 && hailSize >= 4.4) {
+                        if (hailSize < 5 && hailSize >= 4.4) {
                             float maxBreakSpeed = 20f;
                             if (GetBlockSpeed(block) <= maxBreakSpeed) {
                                 float destroySpeed = getDestroySpeed(block, level, blockPos, maxBreakSpeed);
@@ -360,7 +328,7 @@ static int nextCheck = 0;
                             }
                             // Player can die if not protected and some strong blocks start breaking
                         }
-                        else if (hailSize == 5) {
+                        if (hailSize == 5) {
                             // bricks start getting damaged
                             float maxBreakSpeed = 25f;
                             if (GetBlockSpeed(block) <= maxBreakSpeed) {
@@ -455,56 +423,56 @@ static int nextCheck = 0;
 
 
                                float hailSize = 5f * hailLevel;
-                               if (hailSize <= 0.3 && hailSize >= 0) {
+                               if (hailSize >= 0) {
 
                                }
-                               else if (hailSize < 0.7 &&  hailSize > 0.3) {
+                               if (hailSize < 0.7 &&  hailSize > 0.3) {
                                    // base vegetation is destroyed here
                                    if (!block.is(Tags.Blocks.GLASS_BLOCKS) && !block.is(Tags.Blocks.GLASS_BLOCKS) && block.is(BlockTags.FLOWERS)) level.destroyBlock(blockPos,false);
                                }
-                               else if (hailSize < 1.1 &&  hailSize >= 0.7) {
+                               if (hailSize < 1.1 &&  hailSize >= 0.7) {
                                    // leaves start getting broken here
                                    float maxBreakSpeed = 0.2f;
                                    if (!block.is(Tags.Blocks.GLASS_BLOCKS) && !block.is(Tags.Blocks.GLASS_BLOCKS) && block.getDestroySpeed(level,blockPos) <= maxBreakSpeed)
                                        extracted(blockPos);
                                }
-                               else if (hailSize < 1.5 &&  hailSize >= 1.1) {
+                               if (hailSize < 1.5 &&  hailSize >= 1.1) {
                                    float maxBreakSpeed = 0.875f;
                                    if (!block.is(Tags.Blocks.GLASS_BLOCKS) && !block.is(Tags.Blocks.GLASS_BLOCKS) && block.getDestroySpeed(level,blockPos) <= maxBreakSpeed)
                                        extracted(blockPos);
                                }
-                               else if (hailSize < 1.9 &&  hailSize >= 1.5) {
+                               if (hailSize < 1.9 &&  hailSize >= 1.5) {
                                     // Glass will break here
                                    float maxBreakSpeed = 1.55f;
                                    if (!block.is(Tags.Blocks.GLASS_BLOCKS) || block.is(Tags.Blocks.GLASS_BLOCKS) || block.getDestroySpeed(level,blockPos) <= maxBreakSpeed)
                                        extracted(blockPos);
                                }
-                               else if (hailSize < 2.2 &&  hailSize >= 1.9) {
+                               if (hailSize < 2.2 &&  hailSize >= 1.9) {
                                     // first instances of low health mobs getting damaged
                                    float maxBreakSpeed = 2.225f;
                                    if (block.getDestroySpeed(level,blockPos) <= maxBreakSpeed) extracted(blockPos);
                                }
-                               else if (hailSize < 3.1 &&  hailSize >= 2.2) {
+                               if (hailSize < 3.1 &&  hailSize >= 2.2) {
                                     // wood is completely broken
                                    float maxBreakSpeed = 3f;
                                    if (block.getDestroySpeed(level,blockPos) <= maxBreakSpeed) extracted(blockPos);
                                }
-                               else if (hailSize < 3.7 &&  hailSize >= 3.1) {
+                               if (hailSize < 3.7 &&  hailSize >= 3.1) {
                                     // more robust blocks are broken
                                    float maxBreakSpeed = 7f;
                                    if (block.getDestroySpeed(level,blockPos) <= maxBreakSpeed) extracted(blockPos);
                                }
-                               else if (hailSize < 4.4 &&  hailSize >= 3.7) {
+                               if (hailSize < 4.4 &&  hailSize >= 3.7) {
                                     // concrete is damaged and players can suffer large amounts of damage
                                    float maxBreakSpeed = 10;
                                    if (block.getDestroySpeed(level,blockPos) <= maxBreakSpeed) extracted(blockPos);
                                }
-                               else if (hailSize < 5 &&  hailSize >= 4.4) {
+                               if (hailSize < 5 &&  hailSize >= 4.4) {
                                    float maxBreakSpeed = 20f;
                                    if (block.getDestroySpeed(level,blockPos) <= maxBreakSpeed) extracted(blockPos);
                                    // Player can die if not protected and some strong blocks start breaking
                                }
-                               else if (hailSize == 5) {
+                               if (hailSize == 5) {
                                     // bricks start getting damaged
                                    float maxBreakSpeed = 25f;
                                    if (block.getDestroySpeed(level,blockPos) <= maxBreakSpeed) extracted(blockPos);
@@ -563,12 +531,5 @@ static int nextCheck = 0;
 
             return Math.clamp(precip, 0.0F, 1.0F);
 
-    }
-    public static double getEstimatedTPS() {
-        MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
-        if (server != null) {
-            return (double) server.getAverageTickTimeNanos() / 1000000; // nanoseconds to milliseconds
-        }
-        return 0.0;
     }
 }

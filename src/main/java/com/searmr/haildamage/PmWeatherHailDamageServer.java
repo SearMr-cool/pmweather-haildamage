@@ -28,7 +28,10 @@ public class PmWeatherHailDamageServer {
 
     public PmWeatherHailDamageServer(IEventBus modEventBus, ModContainer modContainer) {
         modContainer.registerConfig(ModConfig.Type.SERVER,Config.thing);
+    if (Dist.CLIENT.isClient()) {
 
+        modContainer.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
+    }
     }
 
  }
