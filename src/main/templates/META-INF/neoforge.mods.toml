@@ -59,7 +59,7 @@ description='''${mod_description}'''
 # The coremods config file path is not configurable and is always loaded from META-INF/coremods.json
 
 # A dependency - use the . to indicate dependency for a specific modid. Dependencies are optional.
-[[dependencies.pmwe]] #optional
+[[dependencies.${mod_id}]] #optional
     # the modid of the dependency
     modId="neoforge" #mandatory
     # The type of the dependency. Can be one of "required", "optional", "incompatible" or "discouraged" (case insensitive).
@@ -75,9 +75,15 @@ description='''${mod_description}'''
     # AFTER - This mod is loaded AFTER the dependency
     ordering="NONE"
     # Side this dependency is applied on - BOTH, CLIENT, or SERVER
-    side="BOTH"
+    side="SERVER"
 
-
+[[dependencies.${mod_id}]]
+modId="pmweather"
+type="required"
+# This version range declares a minimum of the current minecraft version up to but not including the next major version
+versionRange=" "
+ordering="AFTER"
+side="SERVER"
 
 # Features are specific properties of the game environment, that you may want to declare you require. This example declares
 # that your mod requires GL version 3.2 or higher. Other features will be added. They are side aware so declaring this won't

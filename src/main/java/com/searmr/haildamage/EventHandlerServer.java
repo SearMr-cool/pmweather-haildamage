@@ -7,6 +7,7 @@ import dev.protomanly.pmweather.event.GameBusEvents;
 import dev.protomanly.pmweather.weather.Storm;
 import dev.protomanly.pmweather.weather.ThermodynamicEngine;
 import dev.protomanly.pmweather.weather.WeatherHandler;
+import dev.protomanly.pmweather.weather.WeatherHandlerServer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Position;
@@ -50,14 +51,12 @@ import static dev.protomanly.pmweather.event.GameBusClientEvents.lastLevel;
 import static dev.protomanly.pmweather.weather.ThermodynamicEngine.getPrecipitationType;
 
 
-@EventBusSubscriber(modid = PmWeatherHailDamage.MODID, bus=EventBusSubscriber.Bus.GAME)
+@EventBusSubscriber(modid = PmWeatherHailDamageServer.MODID, bus=EventBusSubscriber.Bus.GAME)
 public class EventHandlerServer {
     static private  float GetBlockSpeed(BlockState blockState) {
     float mineValue = (blockState.requiresCorrectToolForDrops()) ? 5f : 1.5f;
     return blockState.getBlock().defaultDestroyTime() * mineValue;
     }
-
-    
 
     static public int maxHailDamage = 4;
     private static final Logger log = LoggerFactory.getLogger(EventHandlerServer.class);
@@ -69,10 +68,10 @@ public class EventHandlerServer {
         Entity entity = event.getEntity();
         var managers = GameBusEvents.MANAGERS;
 
-        WeatherHandler handle = (WeatherHandler) managers.get(entity.level().dimension());
+        WeatherHandlerServer handle = (WeatherHandlerServer) managers.get(entity.level().dimension());
 
 
-        if (!entity.level().isClientSide() && handle != null && run ) {
+        if (!entity.level().isClientSide && handle != null && run ) {
 
             ThermodynamicEngine.Precipitation type = getPrecipitationType(handle,entity.position(),entity.level(),0);
                   if (canPrecipitateAt(entity.level(),entity.blockPosition())) {
@@ -501,35 +500,21 @@ public class EventHandlerServer {
     public static float getHail(Level level,Vec3 pos) {
 
 
-            WeatherHandler handler = GameBusEvents.MANAGERS.get(level.dimension());
+            WeatherHandlerServer handler = (WeatherHandlerServer) GameBusEvents.MANAGERS.get(level.dimension());
             float precip = 0.0F;
 
             for(Storm storm : handler.getStorms()) {
                 if (!storm.visualOnly) {
-                    double dist = pos.distanceTo(new Vec3(storm.position.x + (double)2000.0F, pos.y, storm.position.z - (double)900.0F));
-                    if (!(dist > ServerConfig.stormSize * (double)4.0F)) {
-                        double perc = (double)0.0F;
-                        if (storm.stormType == 0) {
-                            perc = (double)1.0F - Math.clamp(dist / (ServerConfig.stormSize * (double)6.0F), (double)0.0F, (double)1.0F);
-                            if (storm.stage == 2) {
-                                perc *= (double)((float)storm.energy / 100.0F);
-                            }
-
-                            if (storm.stage > 2) {
-                                perc *= (double)1.0F;
-                            }
-
-                            if (storm.stage < 2) {
-                                perc *= (double)0.0F;
-                            }
-                        }
-
-                        precip += (float)perc;
-                    }
+                    precip += storm.getHail(pos);
                 }
             }
 
             return Math.clamp(precip, 0.0F, 1.0F);
 
+    }
+
+    private static boolean canPrecipitateAt(Level level, BlockPos pos) {
+            WeatherHandlerServer handler = (WeatherHandlerServer) GameBusEvents.MANAGERS.get(level.dimension());
+           return  handler.getWorld().canSeeSky(pos);
     }
 }
