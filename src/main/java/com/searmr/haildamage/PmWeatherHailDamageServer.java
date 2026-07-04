@@ -4,6 +4,7 @@ package com.searmr.haildamage;
 import com.mojang.logging.LogUtils;
 import dev.protomanly.pmweather.addons.AddonHelper;
 import dev.protomanly.pmweather.addons.AddonInfo;
+import net.minecraft.server.dedicated.DedicatedServer;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -25,23 +26,11 @@ import java.util.Optional;
 
 @Mod(value = PmWeatherHailDamageServer.MODID)
 public class PmWeatherHailDamageServer {
-
     public static final String MODID = "searmrhaildamage";
-
     public static final Logger LOGGER = LogUtils.getLogger();
-
-
     public PmWeatherHailDamageServer(IEventBus modEventBus, ModContainer modContainer) {
-
-
-        modContainer.registerConfig(ModConfig.Type.SERVER,Config.thing);
-    if (Dist.CLIENT.isClient()) {
-
-        modContainer.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
+        modContainer.registerConfig(ModConfig.Type.SERVER, Config.thing);
+        AddonHelper.registerAddon(new AddonInfo(modContainer, List.of("0.16.4")));
     }
-        AddonHelper.registerAddon(new AddonInfo(modContainer,List.of("0.16.4")));
-    }
-
-
- }
+}
 
