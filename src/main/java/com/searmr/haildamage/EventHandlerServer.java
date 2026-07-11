@@ -247,7 +247,7 @@ public class EventHandlerServer {
                 }
                 for (ServerPlayer player : validPlayers) {
 
-                    for (int x = 0; x < 60; x++) {
+                    for (int x = 0; x < Config.hailBlocksPerTick; x++) {
                         BlockPos blockPos = player.blockPosition().offset(new Vec3i(PMWeather.RANDOM.nextInt(-60, 60), PMWeather.RANDOM.nextInt(-10, 10), PMWeather.RANDOM.nextInt(-60, 60)));
                         int topMostBlock = player.level().getHeight(Heightmap.Types.WORLD_SURFACE,(int)blockPos.getX(),(int)blockPos.getZ());
                         blockPos = new BlockPos(blockPos.getX(),topMostBlock,blockPos.getZ());

@@ -30,6 +30,8 @@ public class Config {
     public static double entityDamageModifier;
     private static final ModConfigSpec.DoubleValue block_damage_modifier;
     public static double blockDamageModifier ;
+    private static final ModConfigSpec.IntValue hail_blocks_per_tick;
+    public static int hailBlocksPerTick ;
     public static final ModConfigSpec thing;
 
     @SubscribeEvent
@@ -39,6 +41,7 @@ public class Config {
             hailDestroysBlocks = (Boolean) hail_destroys_blocks.get();
             entityDamageModifier = (double) entity_damage_modifier.get();
             blockDamageModifier = (double) block_damage_modifier.get();
+            hailBlocksPerTick = (int) hail_blocks_per_tick.get();
         }
 
 
@@ -50,7 +53,8 @@ public class Config {
         hail_destroy_time = BUILDER.comment("How long it takes for blocks to be destroyed (1 means they break at their normal block speed while setting it to 2 would mean it takes 2 times as long and etc)").defineInRange("haildestroytime",4,1,10);
         hail_destroys_blocks = BUILDER.comment("Whether or not blocks are destroyed by hail").define("haildestroysblocks",true);
         entity_damage_modifier = BUILDER.comment("Multiplies the final entity damage calculated by this value").defineInRange("entitydamagemodifier",1d,0d,10d);
-        block_damage_modifier = BUILDER.comment("multiplies the final increment value for block destruction by this value").defineInRange("blockdamagemodifier",1d,0d,10d);
+        block_damage_modifier = BUILDER.comment("Multiplies the final increment value for block destruction by this value").defineInRange("blockdamagemodifier",1d,0d,10d);
+        hail_blocks_per_tick = BUILDER.comment("How many blocks per tick to try and start hail damage on").defineInRange("hailblockspertick",13,0,200);
       thing = BUILDER.build();
     }
 }
