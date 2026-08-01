@@ -124,7 +124,7 @@ configurations {
 }
 
 dependencies {
-    implementation "maven.modrinth:protomanlys-weather:0.16.4-alpha"
+    implementation "maven.modrinth:protomanlys-weather:0.17.2-alpha"
 //    implementation "maven.modrinth:serene-seasons:SPj5bJoM"
 //    implementation "maven.modrinth:glitchcore:8wmCpbQ2"
     // Example optional mod dependency with JEI

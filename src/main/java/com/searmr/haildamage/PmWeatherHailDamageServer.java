@@ -30,7 +30,7 @@ public class PmWeatherHailDamageServer {
     public static final Logger LOGGER = LogUtils.getLogger();
     public PmWeatherHailDamageServer(IEventBus modEventBus, ModContainer modContainer) {
         modContainer.registerConfig(ModConfig.Type.SERVER, Config.thing);
-        AddonHelper.registerAddon(new AddonInfo(modContainer, List.of("0.16.4")));
+        AddonHelper.registerAddon(new AddonInfo(modContainer, List.of("0.16.4","0.17.0","0.17.1","0.17.2")));
     }
 }
 
