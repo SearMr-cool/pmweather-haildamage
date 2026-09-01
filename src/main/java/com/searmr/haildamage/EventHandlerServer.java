@@ -34,7 +34,7 @@ import static dev.protomanly.pmweather.event.GameBusClientEvents.canPrecipitateA
 import static dev.protomanly.pmweather.weather.ThermodynamicEngine.getPrecipitationType;
 
 
-@EventBusSubscriber(modid = PmWeatherHailDamageServer.MODID, bus=EventBusSubscriber.Bus.GAME)
+@EventBusSubscriber(modid = PmWeatherHailDamageServer.MODID)
 public class EventHandlerServer {
     static private  float GetBlockSpeed(BlockState blockState) {
     float mineValue = (blockState.requiresCorrectToolForDrops()) ? 5f : 1.5f;
@@ -133,10 +133,8 @@ public class EventHandlerServer {
             Level level = event.getLevel();
             if (!Config.hailDestroysBlocks && !hailAffectedBlocks.isEmpty()) hailAffectedBlocks.clear();
             if (!level.isClientSide() && ServerConfig.validDimensions.contains(level.dimension()) && level instanceof ServerLevel serverLevel && run && Config.hailDestroysBlocks) {
-
-                List<ServerPlayer> validPlayers = new ArrayList();
-                List<ServerPlayer> plrs = serverLevel.players();
-                Collections.shuffle(plrs);
+                List<ServerPlayer> players = serverLevel.players();
+                Collections.shuffle(players);
                 for (var hailBlock : hailAffectedBlocks.entrySet()) {
                     if (PMWeather.RANDOM.nextInt(2) == 1){
                         BlockPos blockPos = hailBlock.getValue().blockPos;
@@ -160,52 +158,52 @@ public class EventHandlerServer {
                             float maxBreakSpeed = 0.2f;
 
                             if (!block.is(Tags.Blocks.GLASS_BLOCKS) && !block.is(Tags.Blocks.GLASS_BLOCKS)) {
-                                handleHailBlockDestroyProcess(hailBlock, block, maxBreakSpeed, level, blockPos, toRemove, plrs);
+                                handleHailBlockDestroyProcess(hailBlock, block, maxBreakSpeed, level, blockPos, toRemove, players);
                             }
                         }
                         if (hailSize < 1.5 && hailSize >= 1.1) {
                             float maxBreakSpeed = 0.875f;
                             if (!block.is(Tags.Blocks.GLASS_BLOCKS) && !block.is(Tags.Blocks.GLASS_BLOCKS)) {
-                                handleHailBlockDestroyProcess(hailBlock, block, maxBreakSpeed, level, blockPos, toRemove, plrs);
+                                handleHailBlockDestroyProcess(hailBlock, block, maxBreakSpeed, level, blockPos, toRemove, players);
                             }
                         }
                         if (hailSize < 1.9 && hailSize >= 1.5) {
                             // Glass will break here
                             float maxBreakSpeed = 1.55f;
-                            handleHailBlockDestroyProcess(hailBlock, block, maxBreakSpeed, level, blockPos, toRemove, plrs);
+                            handleHailBlockDestroyProcess(hailBlock, block, maxBreakSpeed, level, blockPos, toRemove, players);
                         }
                         if (hailSize < 2.2 && hailSize >= 1.9) {
                             // first instances of low health mobs getting damaged
                             float maxBreakSpeed = 2.225f;
-                            handleHailBlockDestroyProcess(hailBlock, block, maxBreakSpeed, level, blockPos, toRemove, plrs);
+                            handleHailBlockDestroyProcess(hailBlock, block, maxBreakSpeed, level, blockPos, toRemove, players);
                         }
                         if (hailSize < 3.1 && hailSize >= 2.2) {
                             // wood is completely broken
                             float maxBreakSpeed = 3f;
-                            handleHailBlockDestroyProcess(hailBlock, block, maxBreakSpeed, level, blockPos, toRemove, plrs);
+                            handleHailBlockDestroyProcess(hailBlock, block, maxBreakSpeed, level, blockPos, toRemove, players);
                         }
                         if (hailSize < 3.7 && hailSize >= 3.1) {
                             // more robust blocks are broken
                             float maxBreakSpeed = 8f;
-                            handleHailBlockDestroyProcess(hailBlock, block, maxBreakSpeed, level, blockPos, toRemove, plrs);
+                            handleHailBlockDestroyProcess(hailBlock, block, maxBreakSpeed, level, blockPos, toRemove, players);
                         }
                         if (hailSize < 4.4 && hailSize >= 3.7) {
                             // concrete is damaged and players can suffer large amounts of damage
                             float maxBreakSpeed = 10f;
-                            handleHailBlockDestroyProcess(hailBlock, block, maxBreakSpeed, level, blockPos, toRemove, plrs);
+                            handleHailBlockDestroyProcess(hailBlock, block, maxBreakSpeed, level, blockPos, toRemove, players);
                         }
                         if (hailSize < 5 && hailSize >= 4.4) {
                             float maxBreakSpeed = 20f;
-                            handleHailBlockDestroyProcess(hailBlock, block, maxBreakSpeed, level, blockPos, toRemove, plrs);
+                            handleHailBlockDestroyProcess(hailBlock, block, maxBreakSpeed, level, blockPos, toRemove, players);
                             // Player can die if not protected and some strong blocks start breaking
                         }
                         if (hailSize == 5) {
                             // bricks start getting damaged
                             float maxBreakSpeed = 25f;
-                            handleHailBlockDestroyProcess(hailBlock, block, maxBreakSpeed, level, blockPos, toRemove, plrs);
+                            handleHailBlockDestroyProcess(hailBlock, block, maxBreakSpeed, level, blockPos, toRemove, players);
                         }
-                       if (!plrs.isEmpty()) {
-                           for (ServerPlayer player : plrs) {
+                       if (!players.isEmpty()) {
+                           for (ServerPlayer player : players) {
                                Vec3 pos = player.position();
 
 
@@ -232,21 +230,8 @@ public class EventHandlerServer {
 
 
 
-                for (ServerPlayer player : plrs) {
-                    boolean isTooNear = false;
 
-                    for (ServerPlayer existing : validPlayers) {
-                        if (existing.distanceTo(player) <= 64.0F) {
-                            isTooNear = true;
-                            break;
-                        }
-                    }
-
-                    if (!isTooNear) {
-                        validPlayers.add(player);
-                    }
-                }
-                for (ServerPlayer player : validPlayers) {
+                for (ServerPlayer player : players) {
 
                     for (int x = 0; x < Config.hailBlocksPerTick; x++) {
                         BlockPos blockPos = player.blockPosition().offset(new Vec3i(PMWeather.RANDOM.nextInt(-60, 60), PMWeather.RANDOM.nextInt(-10, 10), PMWeather.RANDOM.nextInt(-60, 60)));
@@ -372,7 +357,6 @@ public class EventHandlerServer {
             ChunkPos chunkPos = new ChunkPos(new BlockPos((int)pos.x,(int)pos.y,(int)pos.z));
             CachedHailLevel cHL = new CachedHailLevel(level.dimension(),chunkPos);
             WeatherHandlerServer handler = (WeatherHandlerServer) GameBusEvents.MANAGERS.get(level.dimension());
-            float precip = 0.0F;
             float finalPrecip = 0.0f;
             if (!cachedHailLevels.containsKey(cHL)) {
              finalPrecip =  handler.getHail(pos);
