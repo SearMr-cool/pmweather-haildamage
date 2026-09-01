@@ -126,7 +126,8 @@ public class EventHandlerServer {
         @SubscribeEvent
         public static void LevelTick(LevelTickEvent.Post event) {
 
-            List<BlockPos> toRemove = new ArrayList<>();
+            List<BlockPos> toRemove = new ArrayList
+                    <>();
             var logs = PmWeatherHailDamageServer.LOGGER;
 
             Level level = event.getLevel();
@@ -374,12 +375,7 @@ public class EventHandlerServer {
             float precip = 0.0F;
             float finalPrecip = 0.0f;
             if (!cachedHailLevels.containsKey(cHL)) {
-                for(Storm storm : handler.getStorms()) {
-                    if (!storm.visualOnly) {
-                        precip += storm.getHail(pos);
-                    }
-                }
-                finalPrecip = Math.clamp(precip, 0.0F, 1.0F);
+             finalPrecip =  handler.getHail(pos);
             }
             else {
                 finalPrecip = cachedHailLevels.get(cHL);
